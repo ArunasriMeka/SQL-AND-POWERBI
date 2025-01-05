@@ -1,0 +1,142 @@
+1...Top 3 customers based on the amount spent.
+SELECT demo_customers.customer_id,
+    demo_customers.cust_first_name,
+    SUM(demo_orders.order_total) AS totalspent
+FROM 
+    demo_customers
+JOIN 
+    demo_orders 
+ON 
+    demo_customers.customer_id = demo_orders.customer_id
+GROUP BY 
+    demo_customers.customer_id, demo_customers.cust_first_name
+ORDER BY 
+    totalspent DESC
+FETCH FIRST 3 ROWS ONLY;
+
+2-Top 3 customers based on the number of orders.
+SELECT 
+    demo_customers.customer_id,
+    demo_customers.cust_first_name,
+    count(demo_orders.order_total) AS ordernumber
+FROM 
+    demo_customers
+JOIN 
+    demo_orders 
+ON 
+    demo_customers.customer_id = demo_orders.customer_id
+GROUP BY 
+    demo_customers.customer_id, demo_customers.cust_first_name
+ORDER BY 
+    ordernumber DESC
+FETCH FIRST 3 ROWS ONLY;
+3-Top 3 products based on quantity sold.
+
+
+SELECT 
+   demo_products.product_id,
+  demo_products.product_name,
+    SUM(demo_order_items.quantity) AS totalsold
+FROM 
+    demo_products
+JOIN 
+    demo_order_items
+ON 
+    demo_products.product_id = demo_order_items.product_id
+GROUP BY 
+    demo_products.product_id, demo_products.product_name
+ORDER BY 
+    totalsold DESC
+FETCH FIRST 3 ROWS ONLY;
+
+4-Write a query to capture the customer's last name, product names (he bought) and total quantity of each of them
+SELECT 
+    demo_customers.cust_last_name, 
+    demo_products.product_name, 
+    SUM(demo_order_items.quantity) AS totalquantity
+FROM 
+    demo_customers 
+JOIN 
+    demo_orders 
+ON 
+    demo_customers .customer_id = demo_orders.customer_id
+JOIN 
+    demo_order_items  
+ON 
+   demo_orders.order_id = demo_order_items.order_id
+JOIN 
+    demo_products 
+ON 
+    demo_order_items.product_id =demo_products.product_id
+GROUP BY 
+   demo_customers.cust_last_name, 
+   demo_products.product_name;
+5-Transform the rows to columns for the result you get from Query #4 above.
+
+SELECT *
+FROM (
+    SELECT 
+       demo_customers.cust_last_name, 
+      demo_products.product_name, 
+        demo_order_items.quantity
+    FROM demo_customers JOIN demo_orders 
+    ON  demo_customers.customer_id = DEMO_ORDERS.customer_id
+    JOIN demo_order_items 
+    ON  DEMO_ORDERS.order_id = demo_order_items.order_id
+    JOIN  demo_products 
+    ON  demo_order_items.product_id = demo_products .product_id
+)
+PIVOT (SUM(quantity) FOR product_name IN (
+        'Business Shirt' AS "Business Shirt", 
+        'Trousers' AS "Trousers", 
+        'Jacket' AS "Jacket", 
+        'Blouse' AS "Blouse", 
+        'Skirt' AS "Skirt", 
+        'Ladies Shoes' AS "Ladies Shoes", 
+        'Belt' AS "Belt", 
+        'Bag' AS "Bag", 
+        'Mens Shoes' AS "Mens Shoes", 
+        'Wallet' AS "Wallet"
+    )
+);
+6-Which year had most orders?
+
+SELECT  EXTRACT(YEAR FROM DEMO_ORDERS.ORDER_TIMESTAMP) AS orderyear, 
+    COUNT(DEMO_ORDERS.ORDER_ID) AS order_count
+FROM demo_orders 
+GROUP BY 
+    EXTRACT(YEAR FROM DEMO_ORDERS.ORDER_TIMESTAMP)
+ORDER BY 
+    order_count DESC
+FETCH FIRST 1 ROWS ONLY;
+
+8-Which product category was most sold?
+SELECT demo_products.product_name, SUM(demo_order_items.quantity) AS totalsold
+FROM demo_order_items
+JOIN demo_products ON demo_order_items.product_id = demo_products.product_id
+GROUP BY demo_products.product_name
+ORDER BY 
+    totalsold DESC
+FETCH FIRST 1 ROWS ONLY;
+9--Which product category took the second position in terms of quantity sold?
+
+SELECT demo_products.product_name, SUM(demo_order_items.quantity) AS totalsold
+FROM demo_order_items 
+JOIN demo_products  ON  demo_order_items.product_id = demo_products.product_id
+GROUP BY demo_products.product_name
+ORDER BY totalsold DESC
+OFFSET 1 ROWS FETCH NEXT 1 ROWS ONLY;
+
+
+10-Write a query to help rollup total quantity on customer and product (name).
+SELECT demo_customers.cust_last_name, demo_products .product_name, SUM(demo_order_items.quantity) AS total_quantity
+FROM demo_customers 
+JOIN demo_orders ON  demo_customers.customer_id = demo_orders.customer_id
+JOIN demo_order_items ON demo_orders.order_id = demo_order_items.order_id
+JOIN  demo_products  ON demo_order_items.product_id = demo_products .product_id
+GROUP BY 
+    demo_customers.cust_last_name, 
+    demo_products.product_name
+ORDER BY 
+    demo_customers.cust_last_name, demo_products.product_name;
+
